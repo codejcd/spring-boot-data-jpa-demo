@@ -9,6 +9,7 @@ import java.util.Optional;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import org.assertj.core.api.Assertions;
 import org.assertj.core.util.Arrays;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,7 +39,7 @@ public class MemberRepositoryTest {
 	@PersistenceContext
 	EntityManager em;
 	
-	//@Test
+	@Test
 	public void testMember() {
 		Member member = new Member("Jack");
 		Member savedMember = memberRepository.save(member);
@@ -49,7 +51,7 @@ public class MemberRepositoryTest {
 		assertThat(findMember).isEqualTo(member); 
 	}
 	
-	//@Test
+	@Test
 	public void basicCRUD() {
 		Member member1 = new Member("member1");
 		Member member2 = new Member("member2");
@@ -74,7 +76,7 @@ public class MemberRepositoryTest {
 		assertThat(deletedCount).isEqualTo(0);
 	}
 	
-	//@Test
+	@Test
 	public void findByUsernameAndAgeGreaterThen() {
 		Member m1 = new Member("AAA", 10);
 		Member m2 = new Member("AAA", 20);
@@ -89,7 +91,7 @@ public class MemberRepositoryTest {
 		
 	}
 	
-	//@Test
+	@Test
 	public void findByUser() {
 		Member m1 = new Member("AAA", 10);
 		Member m2 = new Member("BBB", 20);
@@ -103,7 +105,7 @@ public class MemberRepositoryTest {
 		
 	}
 	
-	//@Test
+	@Test
 	public void findUsernameList() {
 		Member m1 = new Member("AAA", 10);
 		Member m2 = new Member("BBB", 20);
@@ -117,7 +119,7 @@ public class MemberRepositoryTest {
 	}
 	
 	
-	//@Test 
+	@Test 
 	public void findMemberDto() {
 		
 		Team team = new Team("teamA");
@@ -133,7 +135,7 @@ public class MemberRepositoryTest {
 		}
 	}
 	
-	//@Test 
+	@Test 
 	public void findByNames() {
 		
 		Member m1 = new Member("AAA", 10);
@@ -152,7 +154,7 @@ public class MemberRepositoryTest {
 		}
 	}
 	
-	//@Test 
+	@Test 
 	public void returnType() {
 		
 		Member m1 = new Member("AAA", 10);
@@ -276,6 +278,27 @@ public class MemberRepositoryTest {
 	@Test
 	public void callCustom() {
 		List<Member> result = memberRepository.fidMemberCustom();
+	}
+	
+	@Test
+	public void specBasic() {
+		Team teamA = new Team("teamA");
+		em.persist(teamA);
+		
+		Member m1 = new Member("m1", 0, teamA);
+		Member m2 = new Member("m2", 0, teamA);
+		
+		em.persist(m1);
+		em.persist(m2);
+		
+		em.flush();
+		em.clear();
+		
+		Specification<Member> spec = MemberSpec.username("m1").and(MemberSpec.teamName("teamA"));
+		List<Member> result = memberRepository.findAll(spec);
+		
+		Assertions.assertThat(result.size()).isEqualTo(1);
+		
 	}
 		
 }
