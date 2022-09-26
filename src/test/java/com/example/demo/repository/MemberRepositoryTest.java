@@ -10,7 +10,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 import org.assertj.core.api.Assertions;
-import org.assertj.core.util.Arrays;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,6 +21,7 @@ import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.demo.dto.MemberDto;
+import com.example.demo.dto.UsernameOnlyDto;
 import com.example.demo.entity.Member;
 import com.example.demo.entity.Team;
 
@@ -300,5 +300,59 @@ public class MemberRepositoryTest {
 		Assertions.assertThat(result.size()).isEqualTo(1);
 		
 	}
+	
+	@Test
+	public void queryByExample() { // INNER JOIN 만 가능
+		Team teamA = new Team("teamA");
+		em.persist(teamA);
+		
+		Member m1 = new Member("m1", 0, teamA);
+		Member m2 = new Member("m2", 0, teamA);
+		
+		em.persist(m1);
+		em.persist(m2);
+		
+		em.flush();
+		em.clear();
+		
+		Member member = new Member("m1");
+		org.springframework.data.domain.Example<Member> example = org.springframework.data.domain.Example.of(member);
+		List<Member> result = memberRepository.findAll(example);
+		Assertions.assertThat(result.get(0).getUsername()).isEqualTo("m1");
+		
+	}
+	
+	@Test
+	public void projections() {
+		Team teamA = new Team("teamA");
+		em.persist(teamA);
+		
+		Member m1 = new Member("m1", 0, teamA);
+		Member m2 = new Member("m2", 0, teamA);
+		
+		em.persist(m1);
+		em.persist(m2);
+		
+		em.flush();
+		em.clear();
+		
+		//memberRepository.findByUsername("m1");
+		List<UsernameOnly> usernameOnlyResult = memberRepository.findProjectionsByUsername("m1");
+		for(UsernameOnly item : usernameOnlyResult) {
+			System.out.println("usernameOnly = " + item.getUsername());
+		}
+		
+		List<UsernameOnlyDto> usernameOnlyDtoResult = memberRepository.findProjectionsDtoByUsername("m1", UsernameOnlyDto.class);
+		for(UsernameOnlyDto item : usernameOnlyDtoResult) {
+			System.out.println("usernameOnly = " + item.getUsername());
+		}
+		
+		List<NestedClosedProjections> nestedClosedProjectionsResult = memberRepository.findProjectionsDtoByUsername("m1", NestedClosedProjections.class);
+		for(NestedClosedProjections item : nestedClosedProjectionsResult) { // ROOT 엔티티를 넘어가면 JPQL SELECT 최적화가 안됨 
+			System.out.println("usernameOnly = " + item.getUsername());
+		}
+	}
+	
+	
 		
 }
