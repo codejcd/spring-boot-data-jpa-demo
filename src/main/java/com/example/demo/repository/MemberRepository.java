@@ -19,6 +19,7 @@ import org.springframework.data.jpa.repository.QueryHints;
 import org.springframework.data.repository.query.Param;
 
 import com.example.demo.dto.MemberDto;
+import com.example.demo.dto.UsernameOnlyDto;
 import com.example.demo.entity.Member;
 
 public interface MemberRepository extends JpaRepository<Member, Long>, CustomMemberRepository, JpaSpecificationExecutor<Member> {
@@ -71,4 +72,8 @@ public interface MemberRepository extends JpaRepository<Member, Long>, CustomMem
 	
 	@Lock(LockModeType.PESSIMISTIC_WRITE) // JPA 거를 편하게 쓸수있음
 	List<Member> findLockByUsername(String username);
+	
+	List<UsernameOnly> findProjectionsByUsername(@Param("username") String username);
+	
+	<T> List<T> findProjectionsDtoByUsername(@Param("username") String username, Class<T> type);
 }
